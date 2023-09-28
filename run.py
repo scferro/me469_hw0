@@ -1,37 +1,83 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from robot import Robot
+from map import Map
 
+# Define filenames and test data sets
 odometryFilename = "ds0_odometry_clean.dat"
 groundTruthFilename = "ds0_Groundtruth_clean.dat"
-
-importData = True # Set to True to import data from file. If set to false, a test data set will be used
+landmarkGTFilename = "ds0_Landmark_Groundtruth_clean.dat"
+odometryTest = [[1, 0.5, 0.0, 1.0], [2, 0.0, -1/(2*np.pi), 1.0], [3, 0.5, 0.0, 1.0], [4, 0.0, 1/(2*np.pi), 1.0], [5, 0.5, 0.0, 1.0]] # [case number, linear velocity (m/s), angular velocity (rad/s), time step (sec)]
+measurementTest = [[2,3,0,6], [0,3,0,13], [1,-2,0,17]] # [X, Y, theta, landmark barcode #]
 
 # Define robot initial position and orientation. The values below are taken from the ground truth data
 xInit = 1.29812900
 yInit = 1.88315210
 thetaInit = 2.82870000
 
-# Intialize Robot object
+# Intialize Robot and Map object
 robot = Robot(xInit, yInit, thetaInit)
+map = Map()
 
+
+# (Question 2)
+# Move the robot according to the test control data
+print("QUESTION 2:")
+print("Moving robot according to test data...")
+for case in odometryTest:
+    robot.change_pos(case[1], case[2], case[3])
+print("Robot movement complete! Plot will be displayed after all calculations finish.")
+
+# Create plot
+fig, ax = plt.subplots(figsize=(8, 8))
+robot.plot_position_DR(ax)
+ax.set_aspect(1)
+ax.set(xlabel='X Position (m)', ylabel='Y Position (m)', title='Robot Dead Reckoning Position, Test Data')
+plt.subplots_adjust(left=0.1, right=0.9, bottom=0.1, top=0.9, wspace=0.1, hspace=0.1)
+ax.legend()
+
+# Reset robot odometry and position data
+robot.reset_odometry_pos(xInit, yInit, thetaInit)
+
+
+# (Question 3)
+print("")
+print("QUESTION 3:")
+# Import robot and landmark groundtruth data
+map.import_landmark_GT(landmarkGTFilename)
 robot.import_groundtruth(groundTruthFilename)
 
-if importData == True:
-    # Import and analyze odometry control data from specified file
-    data = robot.import_odometry(odometryFilename)
-    robot.run_odometry()
-else:
-    # Run using the test case below
-    data = [[1, 0.5, 0.0, 1.0], [2, 0.0, -1/(2*np.pi), 1.0], [3, 0.5, 0.0, 1.0], [4, 0.0, 1/(2*np.pi), 1.0], [5, 0.5, 0.0, 1.0]] # [case number, linear velocity (m/s), angular velocity (rad/s), time step (sec)]
-    # Move the robot according to the test control data
-    print("Moving robot...")
-    for case in data:
-        robot.change_pos(case[1], case[2], case[3])
-    print("Robot movement complete!")
+# Import and analyze odometry control data from specified file
+data = robot.import_odometry(odometryFilename)
+robot.run_odometry()
+print("Robot movement complete! Plot will be displayed after all calculations finish.")
 
 # Create plot of motion 
-fig, ax = plt.subplots()
-robot.plot_position_GT(ax)
-robot.plot_position_DR(ax)
-robot.show_plot(ax)
+fig, bx = plt.subplots(figsize=(8,8))
+robot.plot_position_GT(bx)
+robot.plot_position_DR(bx)
+map.plot_landmark_pos(bx)
+bx.set_aspect(1)
+bx.set(xlabel='X Position (m)', ylabel='Y Position (m)', title='Robot Dead Reckoning and Ground Truth Position, Imported Data')
+plt.subplots_adjust(left=0.1, right=0.9, bottom=0.1, top=0.9, wspace=0.1, hspace=0.1)
+bx.legend()
+
+
+# (Question 6)
+print("")
+print("QUESTION 6:")
+# Find landmark heading and distance based on the given robot positions
+caseNum = 1
+for case in measurementTest:
+    [xPos, yPos] = map.landmark_pos(case[3])
+    [dist, phiRob] = robot.find_point_distance_heading(xPos,yPos,case[0],case[1],case[2])
+    print("Robot position, Case " + str(caseNum) + " [X(m), Y(m), Theta(rad)]:")
+    print([case[0],case[1],case[2]])
+    print("Distance and Heading to Landmark, Case " + str(caseNum) + "[Distance (m), Heading (rad, relative to robot)]:")
+    print([dist, phiRob])
+    caseNum += 1
+
+# Plot both graphs
+print("Generating plots!")
+plt.subplots_adjust(left=0.1, right=0.9, bottom=0.1, top=0.9, wspace=0.1, hspace=0.1)
+plt.show()

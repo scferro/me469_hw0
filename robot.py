@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import time as time
+import math as math
 
 plt.style.use('_mpl-gallery')
 
@@ -70,31 +71,24 @@ class Robot:
 
     def plot_position_DR(self, ax):
         # function to plot the robot path based on dead reckoning data
-        print("Plotting dead reckoning movement and ground truth position of robot...")
         xPosDR = []
         yPosDR = []
         for pos in self.posDeadRec:
             xPosDR.append(pos[0])
             yPosDR.append(pos[1])
-        ax.plot(xPosDR, yPosDR, 'r-')
+        ax.plot(xPosDR, yPosDR, 'r-', label=' Robot Dead Reckoning Position')
 
     def plot_position_GT(self, ax):
         # function to plot the robot path based on ground truth data
-        print("Plotting dead reckoning movement and ground truth position of robot...")
         xPosGT = []
         yPosGT = []
         for pos in self.posGroundTruth:
             xPosGT.append(pos[0])
             yPosGT.append(pos[1])
-        ax.plot(xPosGT, yPosGT, 'b-')
-    
-    def show_plot(self, ax):
-        print("Generating plot!")
-        ax.set_aspect( 1 )
-        plt.show()
+        ax.plot(xPosGT, yPosGT, 'b-', label='Robot Ground Truth Position')
 
     def import_odometry(self, filename): 
-        # Imports data from specified file. File should be in same directory as the python files
+        # Imports data from specified odometry file. File should be in same directory as the python files
         print('Importing odometry data from file "' + filename + '"...')
         data = np.genfromtxt(filename)
         countMax = len(data)
@@ -113,7 +107,7 @@ class Robot:
         return newData
     
     def import_groundtruth(self, filename): 
-        # Imports data from specified file. File should be in same directory as the python files
+        # Imports data from specified robot groundtruth file. File should be in same directory as the python files
         print('Importing groundtruth data from file "' + filename + '"...')
         data = np.genfromtxt(filename)
         countMax = len(data)
@@ -131,6 +125,19 @@ class Robot:
         newData = np.delete(newData, 0, 0)
         self.posGroundTruth = newData
         return newData
+    
+    def find_point_distance_heading(self, pointX, pointY, robX=0, robY=0, robTheta=0):
+        #function to find the heading from the robot to a given point (typically this will be a landmark)
+        dist = math.dist([robX, robY], [pointX, pointY])
+        phiGlobal = np.arctan2((pointY-robY),(pointX - robX))
+        phiRob = phiGlobal - robTheta
+        return dist, phiRob
+    
+    def reset_odometry_pos(self, xInit, yInit, thetaInit):
+        # Function to clear stored odometry and position data
+        self.odometry = np.array([0,0,0,0])
+        self.posDeadRec = np.array([xInit, yInit, thetaInit])
+
     
 
 
