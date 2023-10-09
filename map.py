@@ -17,7 +17,6 @@ class Map:
             # Iterate through the data and calculate time steps based on the provided time data
             t0 = data[count][0]
             t1 = data[count + 1][0]
-            tStep = t1 - t0
             newData[int(data[count][0])] = [data[count][1],data[count][2]]
             count += 1
         print("Landmark groundtruth data import complete!")
