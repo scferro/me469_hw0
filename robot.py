@@ -41,21 +41,25 @@ class Robot:
         # Function to move robot according to imported odometry data
 
         ### PARTICLE FILTER TUNING PARAMETERS ##################################
-        minParticles = 50                  # The minimum number of particles that will be generated
-        maxParticles = 400                  # The maximum number of particles that will be generated
+        minParticles = 100                  # The minimum number of particles that will be generated
+        maxParticles = 500                  # The maximum number of particles that will be generated
         initialParticleCount = 200          # The initial number of particles that will be generated
+        extendedParticleCount = 20          # The number of particles that will be generated in an extended radius from the robot
 
-        maxParticleSpread = 0.15           # The maximum x/y distance that a particle will be generated from the previous particle
-        minParticleSpread = 0.005           # The minimum x/y distance that a particle will be generated from the previous particle
-        maxParticleTurn = np.pi/16          # The maximum difference in theta angle between a new particle and the previous particle
-        minParticleTurn = np.pi/64          # The minimum difference in theta angle between a new particle and the previous particle
+        maxParticleSpread = 0.125           # The maximum x/y distance that a particle will be generated from the previous particle
+        minParticleSpread = 0               # The minimum x/y distance that a particle will be generated from the previous particle
+        maxParticleTurn = np.pi/8           # The maximum difference in theta angle between a new particle and the previous particle
+        minParticleTurn = 0                 # The minimum difference in theta angle between a new particle and the previous particle
+        maxParticleSpreadExtended = 3       # The maximum x/y distance that a particle will be generated from the previous particle
 
         initialMaxParticleSpread = 0.25     # The maximum x/y distance that a particle will be generated from the intial position
         initialMaxParticleTurn = np.pi/8    # The maximum difference in theta angle between a new particle and the intial theta angle
                 
-        sigmaMin = 0.1                     # The minimum "sigma" for the position measured by the sensor
-        sigmaMinRange = 0.5                # The distance from the sensor where sigma begins to increase (representing an increase in uncertainty)
+        sigmaMin = 0.1                      # The minimum "sigma" for the position measured by the sensor
+        sigmaMinRange = 1                   # The distance from the sensor where sigma begins to increase (representing an increase in uncertainty)
         sigmaIncreaseRate = 0.1             # The rate that sigma increases as the waypoint moves further from the sensor
+
+        highProbPointCount = 20             # The number of high probability particles to use when calculating an estimate of the current state
         ########################################################################
 
         print("Moving robot according to imported odometry using particle filter to estimate position...")
@@ -89,7 +93,6 @@ class Robot:
                 totalProb = 0
                 highProbParticleArray = np.array([[0,0,0,0],[0,0,0,0]])
                 minHighProb = 0
-                highProbPointCount = 20
                 for particle in self.belState:
                     while particle[2] > np.pi*2:
                         particle[2] += -np.pi*2
@@ -144,7 +147,6 @@ class Robot:
                     newParticle = np.hstack([newParticle, ((np.random.rand() - 0.25) * newParticleTurn * 2)  + randomParticle[2]])
                     newParticle = np.hstack([newParticle, 1])
                     newParticleArray = np.vstack((newParticleArray, newParticle))
-                newParticleArray = np.delete(newParticleArray, 0, axis=0)
                 #print(newParticleArray)
                 #print()
                 #time.sleep(2)
@@ -252,7 +254,7 @@ class Robot:
         for pos in self.measurementPoints:
             xPos.append(float(pos[0]))
             yPos.append(float(pos[1]))
-        ax.scatter(xPos, yPos, c='k', label='Landmark Ground Truth Position')
+        ax.scatter(xPos, yPos, c='g', label='Landmark Ground Truth Position')
 
     def import_odometry(self, filename): 
         # Imports data from specified odometry file. File should be in same directory as the python files
