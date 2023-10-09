@@ -75,7 +75,6 @@ for case in measurementTest:
     print([dist, phiRob])
     caseNum += 1
 
-
 # (Question 8)
 print("")
 print("QUESTION 8:")
@@ -97,6 +96,22 @@ cx.set_aspect(1)
 cx.set(xlabel='X Position (m)', ylabel='Y Position (m)', title='Robot Position Estimate Using Particle Filter and Imported Ground Truth Position (Question 8)')
 plt.subplots_adjust(left=0.1, right=0.9, bottom=0.1, top=0.9, wspace=0.1, hspace=0.1)
 cx.legend()
+
+# Calculate Error
+robot.calculate_error_DR()
+robot.calculate_error_PF()
+
+# Create error graphs
+fig, dx = plt.subplots(figsize=(8,8))
+fig, ex = plt.subplots(figsize=(8,8))
+robot.plot_error_DR(dx, ex)
+robot.plot_error_PF(dx, ex)
+dx.set(xlabel='time (sec)', ylabel='Distance Error (m)', title='Robot Position Estimate Error Compared to Gound Truth Data (Question 8)')
+plt.subplots_adjust(left=0.1, right=0.9, bottom=0.1, top=0.9, wspace=0.1, hspace=0.1)
+dx.legend()
+ex.set(xlabel='time (sec)', ylabel='Angle Error (rad)', title='Robot Angle Estimate Error Compared to Gound Truth Data (Question 8)')
+plt.subplots_adjust(left=0.1, right=0.9, bottom=0.1, top=0.9, wspace=0.1, hspace=0.1)
+ex.legend()
 
 # Plot all graphs
 print("Generating plots!")
