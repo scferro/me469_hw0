@@ -54,15 +54,13 @@ class Robot:
         maxParticles = 500                  # The maximum number of particles that will be generated
         initialParticleCount = 200          # The initial number of particles that will be generated
 
-        maxParticleSpread = 0.15            # The maximum x/y distance that a particle will be generated from the previous particle
-        maxParticleTurn = np.pi/8           # The maximum difference in theta angle between a new particle and the previous particle
+        maxParticleSpread = 0.08            # The maximum x/y distance that a particle will be generated from the previous particle
+        maxParticleTurn = np.pi/6           # The maximum difference in theta angle between a new particle and the previous particle
 
         initialMaxParticleSpread = 0.25     # The maximum x/y distance that a particle will be generated from the intial position
         initialMaxParticleTurn = np.pi/8    # The maximum difference in theta angle between a new particle and the intial theta angle
                 
-        sigmaMin = 0.1                      # The minimum "sigma" for the position measured by the sensor
-        sigmaMinRange = 1                   # The distance from the sensor where sigma begins to increase (representing an increase in uncertainty)
-        sigmaIncreaseRate = 0.0             # The rate that sigma increases as the waypoint moves further from the sensor
+        sigma = 1                           # The uncertainty variable "sigma" for the position measured by the sensor
 
         highProbPointCount = 30             # The number of high probability particles to use when calculating an estimate of the current state
         ########################################################################
@@ -97,8 +95,8 @@ class Robot:
                     initialParticlesX = ((np.random.rand(initialParticleCount, 1) - 0.5) * initialMaxParticleSpread * 2) + initialPosX
                     initialParticlesY = ((np.random.rand(initialParticleCount, 1)- 0.5) * initialMaxParticleSpread * 2) + initialPosY
                     initialParticlesTheta = ((np.random.rand(initialParticleCount, 1) - 0.5) * initialMaxParticleTurn * 2)  + initialPosTheta
-                    initialParticlesProbDist = (np.random.rand(initialParticleCount, 1) * 0 + 1)
-                    self.belState = np.hstack((initialParticlesX, initialParticlesY, initialParticlesTheta, initialParticlesProbDist))
+                    initialParticlesProb = (np.random.rand(initialParticleCount, 1) * 0 + 1)
+                    self.belState = np.hstack((initialParticlesX, initialParticlesY, initialParticlesTheta, initialParticlesProb))
                     particlesGenerated = True
                 # Iterate throught the particle set and calculate the importance factor/probability for each particle
                 for particle in self.belState:
@@ -117,12 +115,7 @@ class Robot:
                     xEstLandmarkMeasurement = measureDist * np.cos(measurePhi)
                     yEstLandmarkMeasurement = measureDist * np.sin(measurePhi)
                     magEstError = ((xEstLandmarkParticle - xEstLandmarkMeasurement)**2 + (yEstLandmarkParticle - yEstLandmarkMeasurement)**2)**0.5
-                    # Calculate measurement uncertainty based on input parameters and the measurement distance
-                    if measureDist >  sigmaMinRange:
-                        sigma = (sigmaIncreaseRate * (measureDist - sigmaMinRange)) + sigmaMin
-                    else:
-                        sigma = sigmaMin
-                    # Use the calculated uncertainty to calculate the importance factor/probability for the particle
+                    # Use the sigma to calculate the importance factor/probability for the particle
                     zError = magEstError / sigma
                     particleProb = 2 * ((1 / 2) * np.exp(-zError**2 / 2))
                     particle[3] = particleProb
@@ -159,8 +152,8 @@ class Robot:
                     newParticleTurn = (maxParticleTurn * (1 - randomParticle[3]))
                     # Generate the new particle and add it to the new particle array
                     newParticle = np.array([((np.random.rand() - 0.5) * newParticleSpread * 2) + randomParticle[0]])
-                    newParticle = np.hstack([newParticle, ((np.random.rand() - 0.25) * newParticleSpread) * 2 + randomParticle[1]])
-                    newParticle = np.hstack([newParticle, ((np.random.rand() - 0.25) * newParticleTurn * 2)  + randomParticle[2]])
+                    newParticle = np.hstack([newParticle, ((np.random.rand() - 0.5) * newParticleSpread) * 2 + randomParticle[1]])
+                    newParticle = np.hstack([newParticle, ((np.random.rand() - 0.5) * newParticleTurn * 2)  + randomParticle[2]])
                     newParticle = np.hstack([newParticle, 1])
                     newParticleArray = np.vstack((newParticleArray, newParticle))
                 # Update the belief state with the array of new particles
@@ -234,7 +227,7 @@ class Robot:
         for pos in self.posDeadRec:
             xPosDR.append(pos[0])
             yPosDR.append(pos[1])
-        ax.plot(xPosDR, yPosDR, 'k-', label=' Robot Dead Reckoning Position')
+        ax.plot(xPosDR, yPosDR, 'b-', label=' Robot Dead Reckoning Position')
 
     def plot_position_PF(self, ax):
         # function to plot the robot path based on dead reckoning data
@@ -252,7 +245,7 @@ class Robot:
         for pos in self.posGroundTruth:
             xPosGT.append(pos[0])
             yPosGT.append(pos[1])
-        ax.plot(xPosGT, yPosGT, 'b-', label='Robot Ground Truth Position')
+        ax.plot(xPosGT, yPosGT, 'k-', label='Robot Ground Truth Position')
 
     def plot_landmark_pos(self, ax):
         # Plots the locations on the landmarks
@@ -526,9 +519,6 @@ class Robot:
                 errorDist.append(point[0])
                 time.append(errorTime)
         # Plot the data
-        print(errorThetaNoMeasure[-1])
-        print(errorDistNoMeasure[-1])
-        print(timeNoMeasure[-1])
         ax.scatter(timeNoMeasure, errorDistNoMeasure, c='r', label='Particle Filter Position Error, No Recent Measurement')
         bx.scatter(timeNoMeasure, errorThetaNoMeasure, c='r', label='Particle Filter Angle Error, No Recent Measurement')
         ax.plot(time, errorDist, 'g-', label='Particle Filter Position Error')
