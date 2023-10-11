@@ -15,6 +15,7 @@ class Robot:
         self.landmarkBarcodes = {}
         self.odometry = np.array([0,0,0,0])
         self.measurement = np.array([0,0,0,0,0])
+        self.numParticles = np.array([[0,0]])
         self.belState = np.array([])
         self.measurementPoints = np.array([0,0,0,0])
         self.errorDR = np.array([0,0,0])
@@ -60,7 +61,7 @@ class Robot:
         initialMaxParticleSpread = 0.25     # The maximum x/y distance that a particle will be generated from the intial position
         initialMaxParticleTurn = np.pi/8    # The maximum difference in theta angle between a new particle and the intial theta angle
                 
-        sigma = 1                           # The uncertainty variable "sigma" for the position measured by the sensor
+        sigma = 0.75                        # The uncertainty variable "sigma" for the position measured by the sensor
 
         highProbPointCount = 30             # The number of high probability particles to use when calculating an estimate of the current state
         ########################################################################
@@ -138,6 +139,7 @@ class Robot:
                 # Calculate the new number of particles to be generated based on the calculated probability of the position estimate
                 newParticleCount = int((1 - highProb) * (maxParticles - minParticles)) + minParticles
                 newParticleArray = np.array([[0,0,0,0]])
+                self.numParticles = np.vstack([self.numParticles, [newParticleCount, timeOdom]])
                 # Generate new particles
                 for particle in range(newParticleCount):
                     # Select a random particle to use as a starting point. Particles are weighted based on importance factor/probability
@@ -175,6 +177,7 @@ class Robot:
             for pos in self.belState:
                 pos[0], pos[1], pos[2] = self.change_pos(command[0], command[1], command[2], pos)
         self.measurementPoints = np.delete(self.measurementPoints, 0, axis=0)    
+        self.numParticles = np.delete(self.numParticles, 0, axis=0)    
         print("Robot movement complete!")
 
     def change_pos(self, vel, omega, timeStep, pos):
@@ -523,3 +526,12 @@ class Robot:
         bx.scatter(timeNoMeasure, errorThetaNoMeasure, c='r', label='Particle Filter Angle Error, No Recent Measurement')
         ax.plot(time, errorDist, 'g-', label='Particle Filter Position Error')
         bx.plot(time, errorTheta, 'g-', label='Particle Filter Angle Error')
+
+    def plot_num_particles(self, ax):
+        # function to plot the robot path based on dead reckoning data
+        numParticles = []
+        time = []
+        for num in self.numParticles:
+            numParticles.append(num[0])
+            time.append(num[1])
+        ax.plot(time, numParticles, 'b-', label='Number of Particles Used')

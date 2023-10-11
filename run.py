@@ -113,6 +113,14 @@ dx.legend()
 ex.set(xlabel='time (sec)', ylabel='Angle Error (rad)', title='Robot Angle Estimate Error Compared to Gound Truth Data (Question 8)')
 ex.legend()
 
+# Create plot of particle count
+fig, fx = plt.subplots(figsize=(8,8))
+robot.plot_num_particles(fx)
+fx.set_aspect(1)
+fx.set(xlabel='time (sec)', ylabel='Number of Particles', title='Generated Particle Count over Time')
+plt.subplots_adjust(left=0.1, right=0.9, bottom=0.1, top=0.9, wspace=0.1, hspace=0.1)
+fx.legend()
+
 # Plot all graphs
 print("Generating plots!")
 plt.subplots_adjust(left=0.1, right=0.9, bottom=0.1, top=0.9, wspace=0.1, hspace=0.1)
